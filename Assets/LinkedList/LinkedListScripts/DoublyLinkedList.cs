@@ -158,6 +158,8 @@ public class DoublyLinkedList<T> : IEnumerable<T>
         {
             node.Previous.Next = node.Next;
             node.Next.Previous = node.Previous;
+            node.Next = null;
+            node.Previous = null;
         }
 
         node.List = null;
