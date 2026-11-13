@@ -1,7 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using JetBrains.Annotations;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 
 public class BinarySearchTree<TKey, TValue> : IDictionary<TKey, TValue>
@@ -38,13 +43,22 @@ where TKey : IComparable<TKey>
 
     public ICollection<TValue> Values => throw new System.NotImplementedException();
 
-    public int Count { get; protected set; }
+    public int Count => CountNodes(root);
+
+    protected virtual int CountNodes(TreeNode<TKey, TValue> node)
+    {
+        if (node == null)
+        {
+            return 0;
+        }
+        return 1 + CountNodes(node.Left) + CountNodes(node.Right);
+    }
 
     public bool IsReadOnly => false;
 
     public virtual void Add(TKey key, TValue value)
     {
-
+        root = Add(root, key, value);
     }
 
     public virtual void Add(KeyValuePair<TKey, TValue> item)
@@ -100,6 +114,39 @@ where TKey : IComparable<TKey>
         return node;
     }
 
+    protected virtual TreeNode<TKey, TValue> Remove(TreeNode<TKey, TValue> node, TKey key)
+    {
+        int compare = key.CompareTo(node.Key);
+        if (compare < 0)
+        {
+            node.Left = Remove(node.Left, key);
+        }
+        else if (compare > 0)
+        {
+            node.Right = Remove(node.Right, key);
+        }
+        else
+        {
+            if (node.Left == null)
+            {
+                return node.Right;
+            }
+            if (node.Right == null)
+            {
+                return node.Left;
+            }
+
+            var minNode = FindMin(node.Right);
+            node.Key = minNode.Key;
+            node.Value = minNode.Value;
+
+            node.Right = Remove(node.Right, minNode.Key);
+        }
+
+        UpdateHeight(node);
+        return node;
+    }
+
     protected virtual void UpdateHeight(TreeNode<TKey, TValue> node)
     {
         node.Height = Mathf.Max(Height(node.Left), Height(node.Right)) + 1;
@@ -110,10 +157,19 @@ where TKey : IComparable<TKey>
         return node == null ? 0 : node.Height;
     }
 
+    protected virtual TreeNode<TKey, TValue> FindMin(TreeNode<TKey, TValue> node)
+    {
+        while (node.Left != null)
+        {
+            node = node.Left;
+        }
+        return node;
+    }
+
 
     public void Clear()
     {
-        throw new System.NotImplementedException();
+        root = null;
     }
 
     public bool Contains(KeyValuePair<TKey, TValue> item)
@@ -128,22 +184,28 @@ where TKey : IComparable<TKey>
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        throw new System.NotImplementedException();
+        여기 하셈
     }
 
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
-        throw new System.NotImplementedException();
+        return InOrderTraversal();
     }
 
     public bool Remove(TKey key)
     {
-        throw new System.NotImplementedException();
+        if (!ContainsKey(key))
+        {
+            return false;
+        }
+
+        root = Remove(root, key);
+        return true;
     }
 
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        throw new System.NotImplementedException();
+        return Remove(item.Key);
     }
 
     public bool TryGetValue(TKey key, out TValue value)
@@ -180,5 +242,34 @@ where TKey : IComparable<TKey>
     {
         return GetEnumerator();
     }
+
+    public virtual IEnumerable<KeyValuePair<TKey, TValue>> InOrderTraversal()
+    {
+        IEnumerable<KeyValuePair<TKey, TValue>> TraverseHelper(TreeNode<TKey, TValue> node)
+        {
+            if (node == null)
+            {
+                yield break;
+            }
+
+            foreach ()
+
+        }
+
+        throw new NotImplementedException();
+    }
+
+
+    public virtual IEnumerable<KeyValuePair<TKey, TValue>> PreOrderTraversal()
+    {
+        throw new NotImplementedException();
+    }
+
+    public virtual IEnumerable<KeyValuePair<TKey, TValue>> PostOrderTraversal()
+    {
+        throw new NotImplementedException();
+    }
+
+    private
 }
 
