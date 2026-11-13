@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using JetBrains.Annotations;
 using Unity.IO.LowLevel.Unsafe;
@@ -8,6 +9,14 @@ using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
+
+public class BinarySearchTreeTest<TKey, TValue> : BinarySearchTree<TKey, TValue> where TKey : IComparable<TKey>
+{
+    public TreeNode<TKey, TValue> GetRoot()
+    {
+        return root;
+    }
+}
 
 public class BinarySearchTree<TKey, TValue> : IDictionary<TKey, TValue>
 where TKey : IComparable<TKey>
@@ -39,9 +48,9 @@ where TKey : IComparable<TKey>
         }
     }
 
-    public ICollection<TKey> Keys => throw new System.NotImplementedException();
+    public ICollection<TKey> Keys => InOrderTraverseHelper(root).Select(t => t.Key).ToList();
 
-    public ICollection<TValue> Values => throw new System.NotImplementedException();
+    public ICollection<TValue> Values => InOrderTraverseHelper(root).Select(t => t.Value).ToList();
 
     public int Count => CountNodes(root);
 
@@ -184,12 +193,19 @@ where TKey : IComparable<TKey>
 
     public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
     {
-        여기 하셈
-    }
+        if (array == null)
+            throw new ArgumentNullException(nameof(array));
+        if (arrayIndex < 0 || arrayIndex > array.Length)
+            throw new ArgumentOutOfRangeException(nameof(arrayIndex));
+        if (array.Length - arrayIndex < Count)
+            throw new ArgumentException(nameof(array));
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-    {
-        return InOrderTraversal();
+        foreach (var kvp in this)
+        {
+            array[arrayIndex++] = kvp;
+        }
+
+
     }
 
     public bool Remove(TKey key)
@@ -238,6 +254,11 @@ where TKey : IComparable<TKey>
         }
     }
 
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+    {
+        return InOrderTraverseHelper(root).GetEnumerator();
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
@@ -245,31 +266,66 @@ where TKey : IComparable<TKey>
 
     public virtual IEnumerable<KeyValuePair<TKey, TValue>> InOrderTraversal()
     {
-        IEnumerable<KeyValuePair<TKey, TValue>> TraverseHelper(TreeNode<TKey, TValue> node)
-        {
-            if (node == null)
-            {
-                yield break;
-            }
-
-            foreach ()
-
-        }
-
-        throw new NotImplementedException();
+        return InOrderTraverseHelper(root);
     }
 
 
     public virtual IEnumerable<KeyValuePair<TKey, TValue>> PreOrderTraversal()
     {
-        throw new NotImplementedException();
+        return PreOrderTraverseHelper(root);
     }
 
     public virtual IEnumerable<KeyValuePair<TKey, TValue>> PostOrderTraversal()
     {
-        throw new NotImplementedException();
+        return PostOrderTraverseHelper(root);
+    }
+    public virtual IEnumerable<KeyValuePair<TKey, TValue>> LevelOrderTraversal()
+    {
+        return LevelOrderTraverseHelper(root);
     }
 
-    private
-}
+    protected virtual IEnumerable<KeyValuePair<TKey, TValue>> LevelOrderTraverseHelper(TreeNode<TKey, TValue> node)
+    {
+        if (node == null) yield break;
 
+        var queue = new Queue<TreeNode<TKey, TValue>>();
+        queue.Enqueue(node);
+
+        while (queue.Count > 0)
+        {
+            var current = queue.Dequeue();
+            yield return new KeyValuePair<TKey, TValue>(current.Key, current.Value);
+
+            if (current.Left != null) queue.Enqueue(current.Left);
+            if (current.Right != null) queue.Enqueue(current.Right);
+        }
+    }
+
+    protected virtual IEnumerable<KeyValuePair<TKey, TValue>> InOrderTraverseHelper(TreeNode<TKey, TValue> node)
+    {
+        if (node == null) yield break;
+
+        foreach (KeyValuePair<TKey, TValue> item in InOrderTraverseHelper(node.Left)) yield return item;
+        yield return new KeyValuePair<TKey, TValue>(node.Key, node.Value);
+        foreach (KeyValuePair<TKey, TValue> item in InOrderTraverseHelper(node.Right)) yield return item;
+
+    }
+
+    protected virtual IEnumerable<KeyValuePair<TKey, TValue>> PreOrderTraverseHelper(TreeNode<TKey, TValue> node)
+    {
+        if (node == null) yield break;
+
+        yield return new KeyValuePair<TKey, TValue>(node.Key, node.Value);
+        foreach (KeyValuePair<TKey, TValue> item in PreOrderTraverseHelper(node.Left)) yield return item;
+        foreach (KeyValuePair<TKey, TValue> item in PreOrderTraverseHelper(node.Right)) yield return item;
+    }
+
+    protected virtual IEnumerable<KeyValuePair<TKey, TValue>> PostOrderTraverseHelper(TreeNode<TKey, TValue> node)
+    {
+        if (node == null) yield break;
+
+        foreach (KeyValuePair<TKey, TValue> item in PostOrderTraverseHelper(node.Left)) yield return item;
+        foreach (KeyValuePair<TKey, TValue> item in PostOrderTraverseHelper(node.Right)) yield return item;
+        yield return new KeyValuePair<TKey, TValue>(node.Key, node.Value);
+    }
+}
