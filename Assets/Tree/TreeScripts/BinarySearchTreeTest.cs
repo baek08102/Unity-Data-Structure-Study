@@ -29,7 +29,7 @@ public class BinarySearchTreeTest : MonoBehaviour
     [ContextMenu("GenerateRandomTree")]
     public void GenerateRandomTree()
     {
-        var tree = new BinarySearchTreeTest<int, string>();
+        var tree = new AVLTreeTest<int, string>();
         for (int i = 0; i < nodeCount; ++i)
         {
             int key = UnityEngine.Random.Range(minKey, maxKey);
@@ -41,6 +41,9 @@ public class BinarySearchTreeTest : MonoBehaviour
         }
 
         treeVisualizer.Visualize(tree.GetRoot());
+
+        Debug.Log($"[AVL] 균형 {(tree.IsBalanced() ? "O" : "X")}");
+
     }
 
     void TestBinarySearchTree()

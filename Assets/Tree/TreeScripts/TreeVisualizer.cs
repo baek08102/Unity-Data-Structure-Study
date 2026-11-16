@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
+using NUnit.Framework.Interfaces;
 using UnityEditor.ShaderGraph.Drawing.Inspector.PropertyDrawers;
 using UnityEngine;
 
@@ -40,6 +42,17 @@ public class TreeVisualizer : MonoBehaviour
                     Vector3.zero,
                     horizontalSpacing * Mathf.Pow(2, root.Height - 3)
                 );
+                break;
+            case SpacingTypes.InOrder:
+                {
+                    int xIndex = 0;
+                    AssginPositionsInOrder(root, 0, ref xIndex);
+                }
+
+                break;
+
+            case SpacingTypes.LevelOrder:
+                AssginPositionsLevelOrder(root);
                 break;
         }
 
@@ -87,7 +100,6 @@ public class TreeVisualizer : MonoBehaviour
         float offset
     )
     {
-        Debug.Log(node);
         if (node == null)
             return;
         nodePositions[node] = position;
@@ -95,5 +107,46 @@ public class TreeVisualizer : MonoBehaviour
         Vector3 below = position + Vector3.down * verticalSpacing;
         AssignPositionsPow(node.Left, below + Vector3.left * offset, offset * 0.5f);
         AssignPositionsPow(node.Right, below + Vector3.right * offset, offset * 0.5f);
+    }
+
+    private void AssginPositionsLevelOrder<TKey, TValue>(TreeNode<TKey, TValue> root)
+    {
+        var queue = new Queue<TreeNode<TKey, TValue>>();
+        queue.Enqueue(root);
+
+        for (int depth = 0; queue.Count > 0; depth++)
+        {
+            int count = queue.Count;
+            for (int i = 0; i < count; ++i)
+            {
+                var node = queue.Dequeue();
+                float x = (i - (count - 1) * 0.5f) * horizontalSpacing;
+                nodePositions[node] = new Vector3(x, -depth * verticalSpacing, 0f);
+
+                if (node.Left != null)
+                {
+                    queue.Enqueue(node.Left);
+                }
+                if (node.Right != null)
+                {
+                    queue.Enqueue(node.Right);
+                }
+            }
+        }
+    }
+
+    private void AssginPositionsInOrder<TKey, TValue>(
+        TreeNode<TKey, TValue> node,
+        int depth,
+        ref int xIndex
+        )
+    {
+        if (node == null)
+            return;
+
+        AssginPositionsInOrder(node.Left, depth + 1, ref xIndex);
+        nodePositions[node] = new Vector3(xIndex * horizontalSpacing, -depth * verticalSpacing, 0f);
+        xIndex++;
+        AssginPositionsInOrder(node.Right, depth + 1, ref xIndex);
     }
 }
