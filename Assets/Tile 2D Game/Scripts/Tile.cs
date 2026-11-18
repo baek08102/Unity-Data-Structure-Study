@@ -1,3 +1,5 @@
+using UnityEngine;
+
 public enum Sides
 {
     Top,
@@ -8,10 +10,50 @@ public enum Sides
 
 public class Tile
 {
+
+    public static readonly int[] tableWeight =
+    {
+        int.MaxValue,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+        2,4,int.MaxValue,1,1,1
+    };
+
+    public bool CanMove => autoTileId != (int)TileTypes.Empty && Weight < int.MaxValue;
+
+    public int Weight
+    {
+        get
+        {
+            if (autoTileId < 0 || autoTileId >= tableWeight.Length)
+            {
+                return int.MaxValue;
+            }
+            return tableWeight[autoTileId];
+        }
+    }
+
     public int id;
     public Tile[] adjacents = new Tile[4];
+    public Tile previous = null;
 
     public int autoTileId;
+    public bool CanVisit => adjacents.Length > 0;
+
+    public bool isVisited = false;
+    public int fowTileId;
+    public Tile[] adjacentsVisited = new Tile[4];
+
+    public void UpdateFowTileId()
+    {
+        fowTileId = 0;
+        for (int i = 0; i < adjacentsVisited.Length; i++)
+        {
+            if (adjacentsVisited[i] != null && adjacentsVisited[i].isVisited == false)
+            {
+                fowTileId |= 1 << i;
+            }
+        }
+        Debug.Log($"fowTileId: {fowTileId}");
+    }
 
     public void UpdateAutoTileId()
     {
@@ -37,7 +79,19 @@ public class Tile
                 break;
             }
         }
+
+        for (int i = 0; i < adjacentsVisited.Length; i++)
+        {
+            if (adjacentsVisited[i] == null)
+                continue;
+            if (adjacentsVisited[i].isVisited == true)
+            {
+                adjacentsVisited[i] = null;
+                break;
+            }
+        }
         UpdateAutoTileId();
+        UpdateFowTileId();
     }
 
     public void ClearAdjacents()
