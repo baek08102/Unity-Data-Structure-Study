@@ -37,6 +37,7 @@ public class HashTableView : MonoBehaviour
 
     private SimpleHashTable<string, int> simpleHashTable;
     private ChainingHashTable<string, string> chainingHashTable;
+    private OpenAddressingHashTable<string, string> openAddressingHashTable;
 
     // 리니어
     // 오픈어드레싱
@@ -69,7 +70,7 @@ public class HashTableView : MonoBehaviour
                 chainingHashTable = new ChainingHashTable<string, string>();
                 break;
             case HashTableTypes.OpenAddressing:
-
+                openAddressingHashTable = new OpenAddressingHashTable<string, string>();
                 break;
         }
 
@@ -85,7 +86,7 @@ public class HashTableView : MonoBehaviour
             case HashTableTypes.Chaining:
                 return chainingHashTable.Capacity;
             case HashTableTypes.OpenAddressing:
-                return 0;
+                return openAddressingHashTable.Capacity;
         }
         return 0;
     }
@@ -120,7 +121,7 @@ public class HashTableView : MonoBehaviour
             case HashTableTypes.Chaining:
                 return chainingHashTable.GetBucketViews();
             case HashTableTypes.OpenAddressing:
-                return Array.Empty<BucketView>();
+                return openAddressingHashTable.GetBucketViews();
         }
         return Array.Empty<BucketView>();
     }
@@ -228,6 +229,7 @@ public class HashTableView : MonoBehaviour
                         chainingHashTable.Add(key, value.ToString());
                         break;
                     case HashTableTypes.OpenAddressing:
+                        openAddressingHashTable.Add(key, value.ToString());
                         break;
                 }
 
@@ -262,6 +264,7 @@ public class HashTableView : MonoBehaviour
                 removed = chainingHashTable.Remove(key);
                 break;
             case HashTableTypes.OpenAddressing:
+                removed = openAddressingHashTable.Remove(key);
                 break;
         }
 
@@ -289,6 +292,7 @@ public class HashTableView : MonoBehaviour
                 chainingHashTable.Clear();
                 break;
             case HashTableTypes.OpenAddressing:
+                openAddressingHashTable.Clear();
                 break;
         }
         AddLog("CLEAR");
