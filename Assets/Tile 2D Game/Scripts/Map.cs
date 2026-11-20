@@ -54,26 +54,26 @@ public class Map
             {
                 int index = r * cols + c;
                 var adjacents = tiles[index].adjacents;
-                var adjacentsVisited = tiles[index].adjacentsVisited;
+
                 if ((r - 1) >= 0)
                 {
                     adjacents[(int)Sides.Top] = tiles[index - cols];
-                    adjacentsVisited[(int)Sides.Top] = tiles[index - cols].isVisited ? null : tiles[index - cols];
+
                 }
                 if ((c + 1) < cols)
                 {
                     adjacents[(int)Sides.Right] = tiles[index + 1];
-                    adjacentsVisited[(int)Sides.Right] = tiles[index + 1].isVisited ? null : tiles[index + 1];
+
                 }
                 if ((c - 1) >= 0)
                 {
                     adjacents[(int)Sides.Left] = tiles[index - 1];
-                    adjacentsVisited[(int)Sides.Left] = tiles[index - 1].isVisited ? null : tiles[index - 1];
+
                 }
                 if ((r + 1) < rows)
                 {
                     adjacents[(int)Sides.Bottom] = tiles[index + cols];
-                    adjacentsVisited[(int)Sides.Bottom] = tiles[index + cols].isVisited ? null : tiles[index + cols];
+
                 }
             }
         }
@@ -81,6 +81,7 @@ public class Map
         for (int i = 0; i < tiles.Length; i++)
         {
             tiles[i].UpdateAutoTileId();
+            tiles[i].UpdateAutoFowId();
         }
     }
 

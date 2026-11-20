@@ -19,6 +19,8 @@ public class Stage : MonoBehaviour
     public Sprite[] islandSprites;
     public Sprite[] fowSprites;
 
+    public int visitRadius = 1;
+
     private Map map;
     public Map Map => map;
 
@@ -78,6 +80,7 @@ public class Stage : MonoBehaviour
 
         CreateGrid();
         CreatePlayer();
+
     }
 
     public Vector3 firstTilePos;
@@ -86,7 +89,52 @@ public class Stage : MonoBehaviour
 
     public void OnTileVisited(int tileId)
     {
-        // Debug.Log($"OnTileVisited({tileId}): ({tileId / mapWidth}, {(tileId % mapWidth)} / {map.tiles}");
+        Debug.Log($"OnTileVisited({tileId}): ({tileId / mapWidth}, {(tileId % mapWidth)} / {map.tiles[tileId].autoTileId}");
+        // Debug.Log($"tile visited = {map.tiles[tileId].isVisited}");
+
+        int centerX = tileId % mapWidth;
+        int centerY = tileId / mapWidth;
+
+        int radius = visitRadius;
+        for (int i = -radius; i <= radius; ++i)
+        {
+            for (int j = -radius; j <= radius; ++j)
+            {
+                int x = centerX + j;
+                int y = centerY + i;
+
+                if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight)
+                {
+                    continue;
+                }
+
+                int id = y * mapWidth + x;
+                map.tiles[id].isVisited = true;
+                DecorateTile(id);
+            }
+        }
+
+        radius += 1;
+        for (int i = -radius; i <= radius; ++i)
+        {
+            for (int j = -radius; j <= radius; ++j)
+            {
+                if (i == radius || i == -radius || j == radius || j == -radius)
+                {
+                    int x = centerX + j;
+                    int y = centerY + i;
+
+                    if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight)
+                    {
+                        continue;
+                    }
+
+                    int id = y * mapWidth + x;
+                    map.tiles[id].UpdateAutoFowId();
+                    DecorateTile(id);
+                }
+            }
+        }
     }
 
     private void CreatePlayer()
@@ -130,6 +178,7 @@ public class Stage : MonoBehaviour
                 newGo.name = $"Tile {tileId} ({i}, {j})";
                 tileObjs[tileId] = newGo;
 
+                // tile.UpdateAutoFowId();
                 DecorateTile(tileId);
             }
             pos.x = startX;
@@ -143,20 +192,22 @@ public class Stage : MonoBehaviour
         var tileGo = tileObjs[tileId];
         var ren = tileGo.GetComponent<SpriteRenderer>();
 
-        if (!tile.isVisited)
+        if (tile.isVisited)
         {
-            ren.sprite = fowSprites[tile.fowTileId];
-            return;
-        }
-
-        if (tile.autoTileId != (int)TileTypes.Empty)
-        {
-            ren.sprite = islandSprites[tile.autoTileId];
+            if (tile.autoTileId != (int)TileTypes.Empty)
+            {
+                ren.sprite = islandSprites[tile.autoTileId];
+            }
+            else
+            {
+                ren.sprite = null;
+            }
         }
         else
         {
-            ren.sprite = null;
+            ren.sprite = fowSprites[tile.fowId];
         }
+
     }
 
     public int ScreenPosToTileId(Vector3 screenPos, bool clamp = true)

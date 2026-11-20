@@ -38,21 +38,19 @@ public class Tile
     public int autoTileId;
     public bool CanVisit => adjacents.Length > 0;
 
-    public bool isVisited = false;
-    public int fowTileId;
-    public Tile[] adjacentsVisited = new Tile[4];
+    public bool isVisited;
+    public int fowId;
 
-    public void UpdateFowTileId()
+    public void UpdateAutoFowId()
     {
-        fowTileId = 0;
-        for (int i = 0; i < adjacentsVisited.Length; i++)
+        fowId = 0;
+        for (int i = 0; i < adjacents.Length; i++)
         {
-            if (adjacentsVisited[i] != null && adjacentsVisited[i].isVisited == false)
+            if (adjacents[i] == null || !adjacents[i].isVisited)
             {
-                fowTileId |= 1 << i;
+                fowId |= 1 << i;
             }
         }
-        Debug.Log($"fowTileId: {fowTileId}");
     }
 
     public void UpdateAutoTileId()
@@ -80,18 +78,8 @@ public class Tile
             }
         }
 
-        for (int i = 0; i < adjacentsVisited.Length; i++)
-        {
-            if (adjacentsVisited[i] == null)
-                continue;
-            if (adjacentsVisited[i].isVisited == true)
-            {
-                adjacentsVisited[i] = null;
-                break;
-            }
-        }
         UpdateAutoTileId();
-        UpdateFowTileId();
+        UpdateAutoFowId();
     }
 
     public void ClearAdjacents()

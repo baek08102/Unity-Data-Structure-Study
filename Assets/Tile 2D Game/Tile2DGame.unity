@@ -730,6 +730,7 @@ MonoBehaviour:
   - {fileID: 21300026, guid: dfa5f63634ba24c06a7c899467e4f9f3, type: 3}
   - {fileID: 21300028, guid: dfa5f63634ba24c06a7c899467e4f9f3, type: 3}
   - {fileID: 21300030, guid: dfa5f63634ba24c06a7c899467e4f9f3, type: 3}
+  visitRadius: 3
   decoCounts: 
   erodePercent: 0.3
   erodeIterations: 3
