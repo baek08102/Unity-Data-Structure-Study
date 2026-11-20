@@ -19,12 +19,17 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
     private LinkedList<KeyValuePair<TKey, TValue>>[] buckets;
     private int size;
     private int count;
+    private EqualityComparer<TKey> keyComparer;
+    private EqualityComparer<TValue> valueComparer;
 
     public ChainingHashTable()
     {
         buckets = new LinkedList<KeyValuePair<TKey, TValue>>[DefaultCapacity];
         size = DefaultCapacity;
         count = 0;
+
+        keyComparer = EqualityComparer<TKey>.Default;
+        valueComparer = EqualityComparer<TValue>.Default;
     }
 
     private int GetHash(TKey key)
@@ -60,18 +65,17 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
             int index = GetHash(key);
 
             // [빈칸 ⑤] 같은 키가 체인에 있으면 값을 바꾸고, 없으면 체인 끝에 추가한다
-            var bucket = buckets[index];
-            if (bucket == null)
+            if (buckets[index] == null)
             {
-                throw new ArgumentNullException(nameof(bucket));
+                buckets[index] = new LinkedList<KeyValuePair<TKey, TValue>>();
             }
 
             if (ContainsKey(key))
             {
-                var node = bucket.First;
+                var node = buckets[index].First;
                 while (node != null)
                 {
-                    if (EqualityComparer<TKey>.Default.Equals(key, node.Value.Key))
+                    if (keyComparer.Equals(key, node.Value.Key))
                     {
                         node.Value = new KeyValuePair<TKey, TValue>(key, value);
                     }
@@ -142,7 +146,6 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
 
         for (int i = 0; i < oldSize; ++i)
         {
-
             if (oldBuckets[i] == null)
             {
                 continue;
@@ -152,7 +155,6 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
             {
                 Add(kvp);
             }
-            Debug.Log($"{i}");
         }
     }
 
@@ -264,18 +266,18 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
         int index = GetHash(key);
 
         // [빈칸 ③] 체인을 LinkedListNode로 따라가며 같은 키의 노드를 지운다
-        var bucket = buckets[index];
-        if (bucket == null)
+
+        if (buckets[index] == null)
         {
             return false;
         }
 
-        var node = bucket.First;
+        var node = buckets[index].First;
         while (node != null)
         {
-            if (EqualityComparer<TKey>.Default.Equals(key, node.Value.Key))
+            if (keyComparer.Equals(key, node.Value.Key))
             {
-                bucket.Remove(node);
+                buckets[index].Remove(node);
                 count--;
                 return true;
             }
@@ -286,11 +288,29 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
 
     public bool Remove(KeyValuePair<TKey, TValue> item)
     {
-        // [빈칸 ③] Remove(key)와 같되 값까지 같아야 지운다
-        if (TryGetValue(item.Key, out TValue value) &&
-        EqualityComparer<TValue>.Default.Equals(item.Value, value))
+        if (item.Key == null)
+            throw new ArgumentNullException(nameof(item.Key));
+
+        int index = GetHash(item.Key);
+
+        // [빈칸 ③] 체인을 LinkedListNode로 따라가며 같은 키의 노드를 지운다
+
+        if (buckets[index] == null)
         {
-            Remove(item.Key);
+            return false;
+        }
+
+        var node = buckets[index].First;
+        while (node != null)
+        {
+            if (keyComparer.Equals(item.Key, node.Value.Key) &&
+            valueComparer.Equals(item.Value, node.Value.Value))
+            {
+                buckets[index].Remove(node);
+                count--;
+                return true;
+            }
+            node = node.Next;
         }
         return false;
     }
@@ -305,7 +325,7 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
         // [빈칸 ②] 버킷의 체인을 순회해 같은 키를 찾으면 value에 담고 true
         foreach (var kvp in buckets[index])
         {
-            if (EqualityComparer<TKey>.Default.Equals(key, kvp.Key))
+            if (keyComparer.Equals(key, kvp.Key))
             {
                 value = kvp.Value;
                 return true;
@@ -328,14 +348,12 @@ public class ChainingHashTable<TKey, TValue> : IDictionary<TKey, TValue>
 
             // [빈칸 ⑥] 체인의 (Key, Value)를 문자열 튜플 리스트로 모아 Occupied로 돌려준다
             var chain = new List<(string, string)>();
-            var node = buckets[i].First;
-            while (node != null)
+            foreach (var kvp in buckets[i])
             {
-                chain.Add((node.Value.Key.ToString(), node.Value.Value.ToString()));
-                node = node.Next;
+                // chain.Add((kvp.Key.ToString(), kvp.Value.ToString()));
+                chain.Add((Convert.ToString(kvp.Key), Convert.ToString(kvp.Value)));
             }
-
-            yield return new BucketView(i, BucketState.Occupied, node.Value.Key.ToString(), node.Value.Value.ToString(), chain);
+            yield return new BucketView(i, BucketState.Occupied, null, null, chain);
         }
     }
 
